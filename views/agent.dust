@@ -1,0 +1,100 @@
+{>layout/}
+{<content}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-4 col-lg-offset-5 col-md-offset-5 col-sm-offset-5 col-xs-offset-4 agent-controls text-center">
+            <button class="btn btn-default go-online btn-danger">
+                <span class="glyphicon glyphicon-facetime-video"></span>
+                <span class="text">&nbsp;Offline</span>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="container header-container">
+    <div class="row">
+        <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+            <p id="header-product" class="header-title">Product Name</p>
+        </div>
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1">
+            <p class="header-title text-center">Price</p>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
+            <p class="header-title">Customer</p>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-center">
+            <p class="header-title">Image</p>
+        </div>
+    </div>
+    <hr/>
+</div>
+<div class="container main">
+    {#visits}
+    <div class="row item" id="collapse-{value._id}">
+        <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 panel-title">
+            <h1 class="item-name">{value.item.name}</h1>
+        </div>
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 panel-price">
+            <h3 class="item-price">{value.item.price}</h3>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center panel-customer">
+            <h3 class="customer-info">{value.customer.name}</h3>
+            <h3 class="customer-info">{value.customer.email}</h3>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-center">
+            <img height="100px" src="{value.item.image}"/>
+        </div>
+        {?value.transcript}
+        <div class="col-md-12">
+            <hr class="feedback-separator" />
+            <p class="feedback-title">
+            Customer Feedback:&nbsp;
+            {?value.sentiment.type}
+            <span>(Sentiment&nbsp;
+            {@select key=value.sentiment.type }
+                {@eq value="neutral"}<span class="glyphicon glyphicon-thumbs-down"> </span>{/eq}
+                {@eq value="negative"}<span class="glyphicon glyphicon-thumbs-down"> </span>{/eq}
+                {@default}<span class="glyphicon glyphicon-thumbs-up"> </span>{/default}
+            {/select}
+            )</span>
+            {/value.sentiment.type}
+            </p>
+            <div class="follow-up-transcript">
+                <div class="text well local transcript-box">
+                    <p>{value.transcript}</p>
+                </div>
+            </div>
+            {?value.keywords}
+            <p class="feedback-title">Feedback keywords:</p>
+            <div class="tags">
+                {#value.keywords}
+                <span class="tag" data-name="{text}">{text} </span>
+                {/value.keywords}
+            </div>
+            {/value.keywords}
+        </div>
+        {/value.transcript}
+        <div class="row controls">
+            <div class="col-md-10"> </div>
+            <a href="#" class="btn btn-default col-md-1 end-call">
+                <span class="glyphicon glyphicon-facetime-video"></span>
+                &nbsp;End Call
+            </a>
+        </div>
+        <div class="row video">
+            <div class="col-md-1"> </div>
+            <div class="col-md-5 local-video"></div>
+            <div class="col-md-5 remote-video"></div>
+            <div class="col-md-1"> </div>
+        </div>
+        <div class="transcript">
+            <h3 class="col-md-12">Customer Feedback:<span class="sentiment"></span></h3>
+            <div class="text well local col-md-12">
+                <p> </p>
+            </div>
+            <div class="keywords">
+            </div>
+        </div>
+    </div>
+    {/visits}
+</div>
+{/content}

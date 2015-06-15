@@ -1,0 +1,12 @@
+<div class="jumbotron">
+    <div class="container">
+        <div class="row">
+          <div class="col-lg-3 col-md-3 col-sm-4 col-xs-4 column">
+              <h3 id="title">Assistant <span class="light-blue">Shop.r</span></h3>
+          </div>
+          <div class="col-lg-6 col-md-6 col-sm-4 col-xs-4 column">
+              <h1 id="tagline">{tagline}</h1>
+          </div>
+        </div>
+    </div>
+</div>

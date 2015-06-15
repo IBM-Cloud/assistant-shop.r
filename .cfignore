@@ -1,0 +1,5 @@
+node_modules
+uploads/
+public/vendor/*
+Assistant_Shopper_Pitch.key
+.env

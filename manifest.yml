@@ -1,0 +1,24 @@
+---
+declared-services:
+  assistant-shop-r-speech-to-text:
+    label: speech_to_text
+    plan: free
+  assistant-shop-r-rules:
+    label: businessrules
+    plan: standard
+  assistant-shop-r-workflow:
+    label: Workflow
+    plan: standard
+  assistant-shop-r-db:
+    label: cloudantNoSQLDB
+    plan: Shared
+applications:
+- name: assistant-shop-r
+  command: node app.js
+  path: .
+  memory: 256m
+  services:
+  - assistant-shop-r-rules
+  - assistant-shop-r-workflow
+  - assistant-shop-r-db
+  - assistant-shop-r-speech-to-text

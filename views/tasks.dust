@@ -1,0 +1,50 @@
+{>layout/}
+{<content}
+<div class="container header-container">
+    <div class="row">
+        <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+            <p id="header-product" class="header-title">Product Name</p>
+        </div>
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1">
+            <p class="header-title text-center">Price</p>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-center">
+            <p class="header-title">Image</p>
+        </div>
+    </div>
+    <hr/>
+</div>
+<div class="container main">
+    {#tasks}
+    <div class="row item vertical-container" id="collapse-{value._id}">
+        <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 task-title">
+            <h1 class="item-name">{value.item.name}</h1>
+        </div>
+        <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 task-price">
+            <h3 class="item-price">{value.item.price}</h3>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-center">
+            <img height="75px" src="{value.item.image}"/>
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 text-center">
+        {@eq key=value.reviewInvestment value="true"}
+            <span class="glyphicon glyphicon-thumbs-up large green"> </span>
+        {:else}
+            <span class="glyphicon glyphicon-thumbs-down large red"> </span>
+        {/eq}
+        </div>
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2 review-actions">
+            <a class="btn btn-default" href="{value.replyLink}?decision=ignore" target="_blank">Ignore</a>
+            <br>
+            <a class="btn btn-default" href="{value.replyLink}?decision=review" target="_blank">
+                {@eq key=value.reviewInvestment value="true"}
+                    Invest
+                {:else}
+                    Divest
+                {/eq}
+            </a>
+        </div>
+    </div>
+    {/tasks}
+</div>
+{/content}
