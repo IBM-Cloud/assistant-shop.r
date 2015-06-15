@@ -8,4 +8,8 @@ Customer feedback contains invaluable insight into client satisfaction. Assistan
 
 # Check out the app
 
-[View the app (https://assistant-shop-r.mybluemix.net)](https://assistant-shop-r.mybluemix.net)
+[View the app (https://assistant-shop-r.mybluemix.net) (Customer View)](https://assistant-shop-r.mybluemix.net)
+
+[View the app (https://assistant-shop-r.mybluemix.net/agent) (Customer Service View)](https://assistant-shop-r.mybluemix.net/agent)
+
+[View the app (https://assistant-shop-r.mybluemix.net) (Buyer View)](https://assistant-shop-r.mybluemix.net/tasks)
