@@ -65,10 +65,11 @@ require('./config/socket')(io, speechToText);
 
 app.get('/ntsToken/:name', function (request, response) {
     var url = "http://sat-token-generator.herokuapp.com/sat-token?AccountSid=" +
-      alchemyCredentials.credentials.accountSID + "&AuthToken=" +
-      alchemyCredentials.credentials.authToken + "&EndpointName=" + request.params.name;
+      twilioCredentials.credentials.accountSID + "&AuthToken=" +
+      twilioCredentials.credentials.authToken + "&EndpointName=" + request.params.name;
 
     restler.get(url).on('complete', function(data) {
+
       response.send(data);
     });
 });
