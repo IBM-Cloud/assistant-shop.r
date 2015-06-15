@@ -10,7 +10,7 @@ Now customer feedback can drive business decisions.  In this demo a video call (
 
 [![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy)
 
-**Note:** If deploying by this method, the app will fail on first deploy. After this initial failure, you must complete steps 9-12 as described in the section 'Running the app on Bluemix' below for your app to start successfully.
+**Note:** If deploying by this method, the app will fail on first deploy. After this initial failure, you must complete steps [9-12](## Running the app on Bluemix) as described in the section [Running the app on Bluemix](## Running the app on Bluemix)  below for your app to start successfully.
 
 [![Build Status](https://codeship.com/projects/5be9a2b0-f58e-0132-c56e-36e59e59a064/status?branch=master)](https://codeship.com/projects/5be9a2b0-f58e-0132-c56e-36e59e59a064/status?branch=master)
 
