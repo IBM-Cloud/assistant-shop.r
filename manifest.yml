@@ -22,3 +22,5 @@ applications:
   - assistant-shop-r-workflow
   - assistant-shop-r-db
   - assistant-shop-r-speech-to-text
+  - assistant-shop-r-alchemy
+  - assistant-shop-r-twilio

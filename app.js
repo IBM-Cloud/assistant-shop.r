@@ -51,6 +51,7 @@ var cloudant,
         password: vcapServices.speech_to_text[0].credentials.password
     },
     alchemyCredentials = _.findWhere(vcapServices["user-provided"], {name: "assistant-shop-r-alchemy"}),
+    twilioCredentials = _.findWhere(vcapServices["user-provided"], {name: "assistant-shop-r-twilio"}),
     speechToText = watson.speech_to_text(watsonCredentials),
     alchemy = new AlchemyApi(alchemyCredentials.credentials.apikey);
 
@@ -64,8 +65,8 @@ require('./config/socket')(io, speechToText);
 
 app.get('/ntsToken/:name', function (request, response) {
     var url = "http://sat-token-generator.herokuapp.com/sat-token?AccountSid=" +
-      process.env.TWILIO_ACCOUNT_SID + "&AuthToken=" +
-      process.env.TWILIO_AUTH_TOKEN + "&EndpointName=" + request.params.name;
+      alchemyCredentials.credentials.accountSID + "&AuthToken=" +
+      alchemyCredentials.credentials.authToken + "&EndpointName=" + request.params.name;
 
     restler.get(url).on('complete', function(data) {
       response.send(data);
