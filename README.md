@@ -10,6 +10,6 @@ Customer feedback contains invaluable insight into client satisfaction. Assistan
 
 [Customer View - https://assistant-shop-r.mybluemix.net](https://assistant-shop-r.mybluemix.net)
 
-[Customer Service View - https://assistant-shop-r.mybluemix.net/agent)](https://assistant-shop-r.mybluemix.net/agent)
+[Customer Service View - https://assistant-shop-r.mybluemix.net/agent](https://assistant-shop-r.mybluemix.net/agent)
 
 [Buyer View - https://assistant-shop-r.mybluemix.net/tasks](https://assistant-shop-r.mybluemix.net/tasks)

@@ -474,8 +474,9 @@ function analyzeTranscript(transcript, callback) {
 
                     console.log("Product", json.theProduct.id, "needs reviewInvestment", reviewInvestment);
 
-                    var url = vcapServices.Workflow[0].credentials.url.replace("/info") + "/myworkflow/productsWorkflow/_/start" +
+                    var url = vcapServices.Workflow[0].credentials.url.replace("/info","") + "/myworkflow/productsWorkflow/_/start" +
                         "?productId=" + json.theProduct.id + "&feedbackScore=" + json.theProduct.feedbackScore + "&reviewInvestment=" + reviewInvestment;
+                    console.log(url);
                     restler.get(url, options).on('complete', function(data) {
                         console.log("finished calling the workflow service");
                         next(null, response);
