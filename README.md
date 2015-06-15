@@ -13,3 +13,7 @@ Customer feedback contains invaluable insight into client satisfaction. Assistan
 [Customer Service View - https://assistant-shop-r.mybluemix.net/agent](https://assistant-shop-r.mybluemix.net/agent)
 
 [Buyer View - https://assistant-shop-r.mybluemix.net/tasks](https://assistant-shop-r.mybluemix.net/tasks)
+
+
+# Architecture Diagram
+<img src="https://raw.githubusercontent.com/IBM-Bluemix/assistant-shop.r/master/github_content/architecture_diagram.png" width="650px"><br>This an architectural overview of the systems that make this app run.<br>
