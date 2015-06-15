@@ -23,7 +23,8 @@
     "alchemy-api": "~1.1.2",
     "dotenv": "~1.1.0",
     "commander": "*",
-    "http-post": "*"
+    "http-post": "*",
+    "cfenv": "*"
   },
   "engines": {
     "node": ">=0.10"

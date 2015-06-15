@@ -30,30 +30,34 @@ var app = require('express')(),
     bodyParser = require('body-parser'),
     https = require('https'),
     AlchemyApi = require('alchemy-api'),
-    dotenv = require("dotenv");
+    dotenv = require("dotenv"),
+    cfenv = require("cfenv");
 
 dotenv.load();
 
-var vcapServices = {};
-
-if (process.env.VCAP_SERVICES) {
-    vcapServices = JSON.parse(process.env.VCAP_SERVICES);
+var vcapLocal = null
+try {
+  vcapLocal = require("./vcap-local.json")
 }
+catch (e) {}
+
+var appEnvOpts = vcapLocal ? {vcap:vcapLocal} : {}
+var appEnv = cfenv.getAppEnv(appEnvOpts);
 
 var cloudant,
     db,
-    cloudantUsername = vcapServices.cloudantNoSQLDB[0].credentials.username,
-    cloudantPassword = vcapServices.cloudantNoSQLDB[0].credentials.password,
+    cloudantCreds = getServiceCreds(appEnv, "assistant-shop-r-db"),
     dbName = "assistant-shop-r",
-    watsonCredentials = {
+    speechToTextCreds = getServiceCreds(appEnv, "assistant-shop-r-speech-to-text"),
+    watsonCreds = {
         version:'v1',
-        username: vcapServices.speech_to_text[0].credentials.username,
-        password: vcapServices.speech_to_text[0].credentials.password
+        username: speechToTextCreds.username,
+        password: speechToTextCreds.password
     },
-    alchemyCredentials = _.findWhere(vcapServices["user-provided"], {name: "assistant-shop-r-alchemy"}),
-    twilioCredentials = _.findWhere(vcapServices["user-provided"], {name: "assistant-shop-r-twilio"}),
-    speechToText = watson.speech_to_text(watsonCredentials),
-    alchemy = new AlchemyApi(alchemyCredentials.credentials.apikey);
+    twilioCreds = getServiceCreds(appEnv, "assistant-shop-r-twilio"),
+    alchemyCreds = getServiceCreds(appEnv, "assistant-shop-r-alchemy"),
+    speechToText = watson.speech_to_text(watsonCreds),
+    alchemy = new AlchemyApi(alchemyCreds.apikey);
 
 app.use(bodyParser.json())
 
@@ -65,8 +69,8 @@ require('./config/socket')(io, speechToText);
 
 app.get('/ntsToken/:name', function (request, response) {
     var url = "http://sat-token-generator.herokuapp.com/sat-token?AccountSid=" +
-      twilioCredentials.credentials.accountSID + "&AuthToken=" +
-      twilioCredentials.credentials.authToken + "&EndpointName=" + request.params.name;
+      twilioCreds.accountSID + "&AuthToken=" +
+      twilioCreds.authToken + "&EndpointName=" + request.params.name;
 
     restler.get(url).on('complete', function(data) {
 
@@ -361,7 +365,7 @@ function seedDB(callback) {
 var port = process.env.VCAP_APP_PORT || 3000;
 server.listen(port, function() {
     var dbCreated = false;
-    Cloudant({account:cloudantUsername, password:cloudantPassword}, function(er, dbInstance) {
+    Cloudant({account:cloudantCreds.username, password:cloudantCreds.password}, function(er, dbInstance) {
         cloudant = dbInstance;
         if (er) {
             return console.log('Error connecting to Cloudant account %s: %s', me, er.message);
@@ -454,18 +458,19 @@ function analyzeTranscript(transcript, callback) {
                     "feedbackScore": feedbackScore
                 }
             };
-
+            var businessRulesCreds = getServiceCreds(appEnv, "assistant-shop-r-rules");
             var options = {
-                username: vcapServices.businessrules[0].credentials.user,
-                password: vcapServices.businessrules[0].credentials.password
+                username: businessRulesCreds.user,
+                password: businessRulesCreds.password
             };
-            var url = vcapServices.businessrules[0].credentials.executionRestUrl + "/productsRuleApp/1.0/productsRuleProject/json";
+            var url = businessRulesCreds.executionRestUrl + "/productsRuleApp/1.0/productsRuleProject/json";
             restler.postJson(url, json, options).on('complete', function(data) {
                 console.log(data);
                 if (data.theProduct.needsInvestmentReview === true || data.theProduct.needsDivestmentReview === true) {
+                    var workflowCreds = getServiceCreds(appEnv, "assistant-shop-r-workflow");
                     var options = {
-                        "username": vcapServices.Workflow[0].credentials.user,
-                        "password": vcapServices.Workflow[0].credentials.password,
+                        "username": workflowCreds.user,
+                        "password": workflowCreds.password,
                     };
 
                     var reviewInvestment = "false";
@@ -476,7 +481,7 @@ function analyzeTranscript(transcript, callback) {
 
                     console.log("Product", json.theProduct.id, "needs reviewInvestment", reviewInvestment);
 
-                    var url = vcapServices.Workflow[0].credentials.url.replace("/info","") + "/myworkflow/productsWorkflow/_/start" +
+                    var url = workflowCreds.url.replace("/info","") + "/myworkflow/productsWorkflow/_/start" +
                         "?productId=" + json.theProduct.id + "&feedbackScore=" + json.theProduct.feedbackScore + "&reviewInvestment=" + reviewInvestment;
                     console.log(url);
                     restler.get(url, options).on('complete', function(data) {
@@ -492,5 +497,13 @@ function analyzeTranscript(transcript, callback) {
     ], callback);
 }
 
-
-
+// Ensures an input service is found in VCAPS
+// If found, returns the service credentials
+function getServiceCreds(appEnv, serviceName) {
+  var serviceCreds = appEnv.getServiceCreds(serviceName)
+  if (!serviceCreds) {
+    console.log("service " + serviceName + " not bound to this application");
+    return null;
+  }
+  return serviceCreds;
+}
