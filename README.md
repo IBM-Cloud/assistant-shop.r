@@ -16,4 +16,4 @@ Customer feedback contains invaluable insight into client satisfaction. Assistan
 
 
 # Architecture Diagram
-<img src="https://raw.githubusercontent.com/IBM-Bluemix/assistant-shop.r/master/github_content/architecture_diagram.png" width="650px"><br>This an architectural overview of the systems that make this app run.<br>
+<img src="https://raw.githubusercontent.com/IBM-Bluemix/assistant-shop.r/master/architecture-diagram.png" width="650px"><br>This an architectural overview of the systems that make this app run.<br>
