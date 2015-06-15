@@ -6,6 +6,8 @@ Customer feedback contains invaluable insight into client satisfaction. Assistan
 
 Now customer feedback can drive business decisions.  In this demo a video call (using Twilio) is held between the customer and customer service agent.  As the video call is happening IBM Watson Speech to Text service is transcribing the audio in real time.  After the video call is over the Alchemy Keywords and Sentiment API's are used to determine which product the customer was giving feedback on and then determines the sentiment of the customers feedback.  Once this is determined the Business Rules service in Bluemix is used to determine if the product has crossed a threshold requiring a buyer at the company to review the product.  The Workflow service in Bluemix is then used to decide whether or not to increase investment in the product or decrease investment in the product.
 
+[![Youtube - App Overview](http://img.youtube.com/vi/EcOryuaGYCI/0.jpg)](http://www.youtube.com/watch?v=EcOryuaGYCI)<br>This an Youtube video of how the app works<br>
+
 [![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy)
 
 *Note: If deploying by this method, the app will fail on first deploy. After this initial failure, you must complete steps 9-12 as described in the section 'Running the app on Bluemix' below for your app to start successfully.
