@@ -237,4 +237,5 @@ Deployment tracking can be disabled by removing `"install": "node admin.js track
 [workflow_plugin_url]: https://hub.jazz.net/code/settings/settings.html#,category=plugins,installPlugin=https://workflow.ng.bluemix.net/workflow/devOpsServices/workflowPlugin.html
 [workflow_settings_url]: https://hub.jazz.net/code/settings/settings.html#,category=Workflow
 [project_gists_url]: https://gist.github.com/JakePeyser/9527612cf9b5d13e0400
+[deploy_track_url]: https://github.com/ibm-cds-labs/deployment-tracker
 [jazzhub_url]: https://hub.jazz.net/
