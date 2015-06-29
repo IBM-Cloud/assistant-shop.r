@@ -7,6 +7,7 @@ Customer feedback contains invaluable insight into client satisfaction. Assistan
 In this demo, a video call (using the new [Twilio video API] [twilio_video_url]) is held between a customer and a customer service agent. As the video call is happening [IBM Watson Speech to Text] [speech_to_text_url] service is transcribing the audio in real time. After the video call completes, [Alchemy API] [alchemy_api_url] is used to automatically determine which product the customer was giving feedback on and then determines the sentiment of that feedback. The corresponding product's feedback score, a number between 0 and 100, fluctuates based on this feedback. After the score is updated, Business Rules are invoked to determine if the product has crossed a threshold to automatically suggest a review of investment in the product. If the rules suggest a review, a process instance for a change in product investment is then started and managed by the Bluemix Workflow service. This creates a task for a buyer at the company. The buyer can then decide whether to ignore or go through with the review, thus completing the process.
 
 [![Youtube - App Overview](http://img.youtube.com/vi/EcOryuaGYCI/0.jpg)](http://www.youtube.com/watch?v=EcOryuaGYCI)
+
 Video - http://img.youtube.com/vi/EcOryuaGYCI/0.jpg
 
 [![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy)
@@ -78,7 +79,7 @@ Video - http://img.youtube.com/vi/EcOryuaGYCI/0.jpg
 	   instances: 1
 	   host: assistant-shop-r-sample
 	```
-    
+
   The host you use will determinate your application url initially, e.g. `<application-host>.mybluemix.net`.
 
 6. Connect to Bluemix in the command line tool and follow the prompts to log in.
@@ -196,7 +197,7 @@ Your RuleApp should now be successfully deployed to your business rules service 
 5. Copy the following gist to this new file and save.
 
 	<script src="https://gist.github.com/JakePeyser/9527612cf9b5d13e0400.js?file=productsWorkflow.jsflow"></script>
-	
+
 6. To deploy this workflow to your service, click **Tools > Deploy to Workflow service**. A notification stating `Workflow deployment successful` should appear at the top of the screen.
 
 Your workflow should now be successfully deployed to your workflow service instance! To confirm this, navigate to your workflow service and click **Launch Admin Console**. You can find your deployed workflows and corresponding process instances here.
