@@ -1,0 +1,77 @@
+{
+   "services": {
+      "businessrules": [
+         {
+            "name": "assistant-shop-r-rules",
+            "label": "businessrules",
+            "plan": "standard",
+            "credentials": {
+               "executionAdminUrl": "https://brsv2-YOUR_SERVICE.ng.bluemix.net/res",
+               "executionSoapUrl": "https://brsv2-YOUR_SERVICE.ng.bluemix.net/DecisionService/ws",
+               "executionAdminRestUrl": "https://brsv2-YOUR_SERVICE.ng.bluemix.net/res/apiauth",
+               "executionRestUrl": "https://brsv2-YOUR_SERVICE.ng.bluemix.net/DecisionService/rest",
+               "password": "YOUR_PASSWORD",
+               "user": "YOUR_USERNAME"
+            }
+         }
+      ],
+      "Workflow": [
+         {
+            "name": "assistant-shop-r-workflow",
+            "label": "Workflow",
+            "plan": "standard",
+            "credentials": {
+               "url": "https://workflow.ng.bluemix.net/YOUR_SERVICE/info",
+               "user": "YOUR_USERNAME",
+               "password": "YOUR_PASSWORD"
+            }
+         }
+      ],
+      "cloudantNoSQLDB": [
+         {
+            "name": "assistant-shop-r-db",
+            "label": "cloudantNoSQLDB",
+            "plan": "Shared",
+            "credentials": {
+               "username": "YOUR_USERNAME",
+               "password": "YOUR_PASSWORD",
+               "host": "YOUR_USERNAME.cloudant.com",
+               "port": 443,
+               "url": "YOUR_URL"
+            }
+         }
+      ],
+      "speech_to_text": [
+         {
+            "name": "assistant-shop-r-speech-to-text",
+            "label": "speech_to_text",
+            "plan": "free",
+            "credentials": {
+               "url": "https://stream.watsonplatform.net/speech-to-text-beta/api",
+               "username": "YOUR_USERNAME",
+               "password": "YOUR_PASSWORD"
+            }
+         }
+      ],
+      "user-provided": [
+         {
+            "name": "assistant-shop-r-alchemy",
+            "label": "user-provided",
+            "credentials": {
+               "url": "https://access.alchemyapi.com",
+               "dashboard_url": "https://www.alchemyapi.com/api",
+               "apikey": "YOUR_API_KEY"
+            }
+         },
+         {
+            "name": "assistant-shop-r-twilio",
+            "label": "user-provided",
+            "credentials": {
+               "url": "https://api.twilio.com",
+               "accountSID": "YOUR-ACCOUNT-SID",
+               "authToken": "YOUR_AUTH_TOKEN"
+            }
+         }
+      ]
+   }
+}
