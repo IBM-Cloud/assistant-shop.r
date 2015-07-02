@@ -2,7 +2,7 @@
 declared-services:
   assistant-shop-r-speech-to-text:
     label: speech_to_text
-    plan: free
+    plan: Standard
   assistant-shop-r-rules:
     label: businessrules
     plan: standard
