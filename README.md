@@ -92,7 +92,7 @@ Video - https://www.youtube.com/watch?v=EcOryuaGYCI
 7. Create the Speech to Text service in Bluemix.
 
   ```
-  $ cf create-service speech_to_text free assistant-shop-r-speech-to-text
+  $ cf create-service speech_to_text Standard assistant-shop-r-speech-to-text
   ```
 
 8. Create the Cloudant service in Bluemix.
