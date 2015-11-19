@@ -32,7 +32,7 @@ var express = require('express'),
   cfenv = require('cfenv');
 
 //---Deployment Tracker---------------------------------------------------------
-//require("cf-deployment-tracker-client").track();
+require("cf-deployment-tracker-client").track();
 
 //---Environment Vars-----------------------------------------------------------
 var vcapLocal = null

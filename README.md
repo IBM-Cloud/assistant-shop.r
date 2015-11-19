@@ -10,6 +10,8 @@ Video Walkthrough - https://www.youtube.com/watch?v=EcOryuaGYCI
 
 [![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy)
 
+![Bluemix Deployments](https://deployment-tracker.mybluemix.net/stats/33c837adc45603261cd15deadadc2317/badge.svg)
+
 **Note:** If deploying by this method, the app will fail on first deploy. After this initial failure, you must complete steps 12-18 as described in the section 'Running the app on Bluemix', as well as configure your business rules and workflow. Only then will your app start successfully.
 
 ## Application Requirements
