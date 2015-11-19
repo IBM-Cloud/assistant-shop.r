@@ -45,9 +45,9 @@
          {
             "name": "assistant-shop-r-speech-to-text",
             "label": "speech_to_text",
-            "plan": "free",
+            "plan": "standard",
             "credentials": {
-               "url": "https://stream.watsonplatform.net/speech-to-text-beta/api",
+               "url": "https://stream.watsonplatform.net/speech-to-text/api",
                "username": "YOUR_USERNAME",
                "password": "YOUR_PASSWORD"
             }

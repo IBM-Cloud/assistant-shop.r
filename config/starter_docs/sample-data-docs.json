@@ -1,0 +1,79 @@
+[
+  {
+    "type": "purchase",
+    "customer": {
+      "name": "David Colson",
+      "email": "dcolson@gmail.com"
+    },
+    "item": {
+      "id": "102",
+        "name": "Polo Shirt",
+        "image": "http://i00.i.aliimg.com/wsphoto/v0/359840214/Wholesale-Men-s-Polo-Shirts-Brand-Tshirt-T-Shirt-Tee-Shirt-Polo-Shirt-Fashion-Cotton-Polo.jpg",
+        "price": "$45"
+    }
+  },
+  {
+    "type": "purchase",
+    "customer": {
+      "name": "Jeff Davis",
+      "email": "jdavis@gmail.com"
+    },
+    "item": {
+      "id": "101",
+      "name": "Blue Jeans",
+      "image": "http://i00.i.aliimg.com/wsphoto/v0/882138636/Mens-capri-jeans-Light-blue-Skinny-Whisker-Abrade-Cotton-Korean-style-Casual-Drop-shipping-1-Piece.jpg",
+      "price": "$75"
+    },
+    "transcript": "I really love these jeans that I bought at your Hoboken New Jersey department store. I am really impressed with the quality of the denim.",
+    "keywords": [
+      {
+        "text": "jeans"
+      },
+      {
+        "text": "denim"
+      },
+      {
+        "text": "department store"
+      },
+      {
+        "text": "New Jersey"
+      },
+      {
+        "text": "Hoboken"
+      }
+    ],
+    "sentiment": {
+      "type": "positive"
+    },
+    "preventDelete": true
+  },
+  {
+    "type": "task",
+    "productId": "101",
+    "reviewInvestment": "true",
+    "user": "Brooke",
+    "replyLink": "https://workflow.ng.bluemix.net:443/2b082f1f-9d77-4029-a9ca-32da43630adc/myworkflow/productsWorkflow/PI-1-c777010d-eb8b-45bc-acce-e4b4e41bbec1/decision",
+    "item":
+    {
+      "id": "101",
+      "name": "Blue Jeans",
+      "image": "http://i00.i.aliimg.com/wsphoto/v0/882138636/Mens-capri-jeans-Light-blue-Skinny-Whisker-Abrade-Cotton-Korean-style-Casual-Drop-shipping-1-Piece.jpg",
+      "price": "$75"
+    },
+    "preventDelete": true
+  },
+  {
+    "type": "item",
+    "productId": "101",
+    "name": "Blue Jeans",
+    "image": "http://i00.i.aliimg.com/wsphoto/v0/882138636/Mens-capri-jeans-Light-blue-Skinny-Whisker-Abrade-Cotton-Korean-style-Casual-Drop-shipping-1-Piece.jpg",
+    "price": "$75"
+  },
+  {
+    "type": "item",
+    "productId": "102",
+    "name": "Polo Shirt",
+    "image": "http://i00.i.aliimg.com/wsphoto/v0/359840214/Wholesale-Men-s-Polo-Shirts-Brand-Tshirt-T-Shirt-Tee-Shirt-Polo-Shirt-Fashion-Cotton-Polo.jpg",
+    "price": "$45"
+  }
+]

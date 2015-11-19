@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 IBM Corp. All Rights Reserved.
+ * Copyright 2015 IBM Corp. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,487 +16,426 @@
 
 'use strict';
 
-var app = require('express')(),
-    server = require('http').Server(app),
-    io = require('socket.io')(server),
-    bluemix = require('./config/bluemix'),
-    watson = require('watson-developer-cloud'),
-    extend = require('util')._extend,
-    twilio = require('twilio'),
-    restler = require("restler"),
-    _ = require("underscore"),
-    Cloudant = require('cloudant'),
-    async = require("async"),
-    bodyParser = require('body-parser'),
-    https = require('https'),
-    AlchemyApi = require('alchemy-api'),
-    dotenv = require("dotenv"),
-    cfenv = require("cfenv");
+var express = require('express'),
+  app = express(),
+  http = require('http'),
+  server = http.Server(app),
+  extend = require('util')._extend,
+  restler = require('restler'),
+  _ = require('underscore'),
+  cloudantPkg = require('cloudant'),
+  async = require('async'),
+  bodyParser = require('body-parser'),
+  dust = require("dustjs-linkedin"),
+  consolidate = require("consolidate"),
+  https = require('https'),
+  cfenv = require('cfenv');
 
-dotenv.load();
+//---Deployment Tracker---------------------------------------------------------
+//require("cf-deployment-tracker-client").track();
 
+//---Environment Vars-----------------------------------------------------------
 var vcapLocal = null
 try {
-  vcapLocal = require("./vcap-local.json")
+  vcapLocal = require('./vcap-local.json')
 }
 catch (e) {}
 
 var appEnvOpts = vcapLocal ? {vcap:vcapLocal} : {}
 var appEnv = cfenv.getAppEnv(appEnvOpts);
 
-var cloudant,
-    db,
-    cloudantCreds = getServiceCreds(appEnv, "assistant-shop-r-db"),
-    dbName = "assistant-shop-r",
+//---Global Vars----------------------------------------------------------------
+var agentStatus = "offline",
+    feedbackScore = 20;
+
+//---Set up Speech to Text------------------------------------------------------
+var watson = require('watson-developer-cloud'),
     speechToTextCreds = getServiceCreds(appEnv, "assistant-shop-r-speech-to-text"),
     watsonCreds = {
         version:'v1',
+        url: speechToTextCreds.url,
         username: speechToTextCreds.username,
         password: speechToTextCreds.password
     },
+    speechToText = watson.speech_to_text(watsonCreds);
+
+//---Set up Twilio--------------------------------------------------------------
+var twilio = require('twilio'),
     twilioCreds = getServiceCreds(appEnv, "assistant-shop-r-twilio"),
+    twilioTokenUrl = "http://sat-token-generator.herokuapp.com/sat-token?" +
+      "AccountSid=" + twilioCreds.accountSID +
+      "&AuthToken=" + twilioCreds.authToken;
+
+//---Set up AlchemyAPI----------------------------------------------------------
+var alchemyApi = require('alchemy-api'),
     alchemyCreds = getServiceCreds(appEnv, "assistant-shop-r-alchemy"),
-    speechToText = watson.speech_to_text(watsonCreds),
-    alchemy = new AlchemyApi(alchemyCreds.apikey);
+    alchemy = new alchemyApi(alchemyCreds.apikey);
 
-app.use(bodyParser.json())
+//---Set up Business Rules------------------------------------------------------
+var businessRulesCreds = getServiceCreds(appEnv, "assistant-shop-r-rules"),
+    rulesUrl = businessRulesCreds.executionRestUrl + "/productsRuleApp/1.0/productsRuleProject/json",
+    rulesOptions = {
+      username: businessRulesCreds.user,
+      password: businessRulesCreds.password
+    };
 
-// Configure express
-require('./config/express')(app, speechToText);
+//---Set up Workflow------------------------------------------------------------
+var workflowCreds = getServiceCreds(appEnv, "assistant-shop-r-workflow"),
+    workflowOptions = {
+      username: workflowCreds.user,
+      password: workflowCreds.password,
+    };
 
-// Configure sockets
-require('./config/socket')(io, speechToText);
+//---Set up Cloudant------------------------------------------------------------
+var cloudant,
+    db,
+    cloudantCreds = getServiceCreds(appEnv, "assistant-shop-r-db"),
+    cloudantOptions = {
+      account: cloudantCreds.username,
+      password: cloudantCreds.password
+    },
+    dbName = "assistant-shop-r";
 
+cloudantPkg(cloudantOptions, function(error, dbInstance) {
+  // Check to make sure Cloudant connection was successful
+  cloudant = dbInstance;
+  if (error) {
+    return console.error('Error connecting to Cloudant account %s: %s', me, error.message);
+  }
+
+  // Obtain a list of all DBs in the Cloudant account
+  console.log('Connected to Cloudant');
+  cloudant.db.list(function(error, all_dbs) {
+    if (error) {
+      return console.log('Error listing databases: %s', error.message);
+    }
+    console.log('All my databases: %s', all_dbs.join(', '));
+
+    // Check to make sure DB is in that list
+    var dbCreated = false
+    _.each(all_dbs, function(name) {
+      if (name === dbName) {
+        dbCreated = true;
+      }
+    });
+
+    // Create DB if it does not yet exist
+    if (dbCreated === false) {
+      cloudant.db.create(dbName, seedDB);
+    }
+    else {
+      db = cloudant.db.use(dbName);
+      console.log("DB", dbName, "already exists");
+    }
+  });
+});
+
+//---Start server---------------------------------------------------------------
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+
+app.engine("dust", consolidate.dust);
+app.set("template_engine", "dust");
+app.set("views", __dirname + '/views');
+app.set("view engine", "dust");
+
+app.use(express.static(__dirname + "/public"))
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+server.listen(appEnv.port, function() {
+  console.log("server started on port " + appEnv.port);
+});
+
+//---Server Requests------------------------------------------------------------
+
+//---Token Generators-----------------------------------------------------------
 app.get('/ntsToken/:name', function (request, response) {
-    var url = "http://sat-token-generator.herokuapp.com/sat-token?AccountSid=" +
-      twilioCreds.accountSID + "&AuthToken=" +
-      twilioCreds.authToken + "&EndpointName=" + request.params.name;
-
-    restler.get(url).on('complete', function(data) {
-
-      response.send(data);
-    });
+  var url = twilioTokenUrl + "&EndpointName=" + request.params.name;
+  restler.get(url).on('complete', function(data) {
+    response.send(data);
+  });
 });
 
-var agentStatus = "offline";
-
-var feedbackScore = 20;
-
-app.get("/agentStatus", function (request, response) {
-    response.send({"status": agentStatus});
+// Get token using your credentials
+app.post('/api/token', function(req, res, next) {
+  authService.getToken({url: speechConfig.url}, function(err, token) {
+    if (err)
+      next(err);
+    else
+      res.send(token);
+  });
 });
 
-app.get("/agentStatus/:status", function (request, response) {
-    agentStatus = request.params.status;
-    response.sendStatus(204);
-});
-
+//---View Endpoints-------------------------------------------------------------
 app.get('/agent', function (request, response) {
-    db.view("purchases", "all", { sort: ["-date"] },function (error, result) {
-        response.render('agent', {visits: result.rows, tagline: "Customer Feedback"});
+  db.view("purchases", "all", { sort: ["-date"] },function (error, result) {
+    response.render('agent', {
+      visits: result.rows,
+      tagline: "Customer Feedback",
+      title: "Agent",
+      js: "/js/agentVideo.js",
+      jsSpeech: "/js/speech-receiver.js"
     });
-});
-
-app.get("/api/v1/purchases/:id", function (request, response) {
-    db.get(request.params.id ,function (error, result) {
-        if (result) {
-            response.send(result);
-        }
-        else {
-            response.send({});
-        }
-    });
+  });
 });
 
 app.get('/', function( request, response) {
-    db.view("purchases", "customer", { keys: ["David Colson"], sort: "-date" }, function (error, result) {
-        response.render('index', {visits: result.rows, tagline: "My Purchases"});
+  db.view("purchases", "customer", { keys: ["David Colson"], sort: "-date" }, function (error, result) {
+    response.render('index', {
+      visits: result.rows,
+      tagline: "My Purchases",
+      title: "Purchases",
+      js: "/js/customerVideo.js",
+      jsSpeech: "/js/speech-recognizer.js"
     });
+  });
 });
 
+//---Agent Status Changes-------------------------------------------------------
+app.get("/agentStatus", function (request, response) {
+  response.send({"status": agentStatus});
+});
+
+app.get("/agentStatus/:status", function (request, response) {
+  agentStatus = request.params.status;
+  response.sendStatus(204);
+});
+
+//---DB Endpoints---------------------------------------------------------------
 app.get("/tasks", function( request, response) {
-    db.view("tasks", "all", function (error, result) {
-        response.render("tasks", {tasks: result.rows, tagline: "Pending Tasks"});
-    });
+  db.view("tasks", "all", function (error, result) {
+    response.render("tasks", {tasks: result.rows, tagline: "Pending Tasks", title: "Tasks"});
+  });
+});
+
+app.get("/api/v1/purchases/:id", function (request, response) {
+  db.get(request.params.id ,function (error, result) {
+    if (result) {
+      response.send(result);
+    }
+    else {
+      response.send({});
+    }
+  });
 });
 
 app.get("/api/v1/task", function (request, response) {
-    var task = request.query;
-    task.type = "task";
-    async.waterfall([
-        function (next) {
-            db.view("purchases", "itemId", { keys: [task.productId]}, next);
-        },
-        function (result, headers, next) {
-            if (result.rows.length > 0) {
-                task.item = result.rows[0].value.item;
-            }
-            db.insert(task, next);
-        }
-    ], function (error) {
-        if (error) {
-            console.error(error);
-            response.sendStatus(500);
-        }
-        else {
-            response.sendStatus(204);
-        }
-    });
+  var task = request.query;
+  task.type = "task";
+  async.waterfall([
+    function (next) {
+      db.view("purchases", "itemId", { keys: [task.productId]}, next);
+    },
+    function (result, headers, next) {
+      if (result.rows.length > 0) {
+        task.item = result.rows[0].value.item;
+      }
+      db.insert(task, next);
+    }
+  ], function (error) {
+    if (error) {
+      console.error(error);
+      response.sendStatus(500);
+    }
+    else {
+      response.sendStatus(204);
+    }
+  });
 });
 
+// Resets the DB to a clean state for a new demo
 app.get("/api/v1/clear", function (request, response) {
+  //TODO
+  feedbackScore = 20;
 
-    //TODO
-    feedbackScore = 20;
-
-    async.waterfall(
-    [
-        function (next) {
-            db.view("purchases", "all", next);
-        },
-        function (result, headers, next) {
-            var purchases = [];
-            _.each(result.rows, function (row) {
-                if (!row.value.preventDelete) {
-                    delete row.value.transcript;
-                    delete row.value.feedbackScore;
-                    delete row.value.sentiment;
-                    delete row.value.keywords;
-                }
-                purchases.push(row.value);
-            });
-            async.each(purchases, db.insert, next);
-        },
-        function (next) {
-            db.view("tasks", "all", next);
-        },
-        function (result, headers, next) {
-            var tasks = [];
-            _.each(result.rows, function (row) {
-                if (!row.value.preventDelete) {
-                    row.value._deleted = true;
-                    tasks.push(row.value);
-                }
-            });
-            db.bulk({docs: tasks}, next);
+  async.waterfall([
+    // Get all purchases in the DB
+    function (next) {
+      db.view("purchases", "all", next);
+    },
+    // Delete all analysis from all non-permanent purchases
+    function (result, headers, next) {
+      var purchases = [];
+      _.each(result.rows, function (row) {
+        if (!row.value.preventDelete) {
+          delete row.value.transcript;
+          delete row.value.feedbackScore;
+          delete row.value.sentiment;
+          delete row.value.keywords;
         }
-    ], function(error) {
-        if (error) {
-            console.error(error);
-            response.sendStatus(500);
+        purchases.push(row.value);
+      });
+      async.each(purchases, db.insert, next);
+    },
+    // Get all tasks from the DB
+    function (next) {
+      db.view("tasks", "all", next);
+    },
+    // Delete all analysis from all non-permanent purchases
+    function (result, headers, next) {
+      var tasks = [];
+      _.each(result.rows, function (row) {
+        if (!row.value.preventDelete) {
+          row.value._deleted = true;
+          tasks.push(row.value);
         }
-        else {
-            response.sendStatus(204);
-        }
-    });
+      });
+      db.bulk({docs: tasks}, next);
+    }], function(error) {
+    if (error) {
+      console.error(error);
+      response.sendStatus(500);
+    }
+    else {
+      console.log("DB cleared successfully")
+      response.sendStatus(204);
+    }
+  });
 });
 
+// Analyze a transcript for the input record and return analysis to client
 app.post("/transcript/:id", function (request, response, callback) {
-    var record;
+  var record;
 
-    async.waterfall([
-        function (next) {
-            db.get(request.params.id, next);
-        },
-        function (result, headers, next) {
-            record = result;
-            record.transcript = request.body.transcript;
-            analyzeTranscript(record.transcript, next);
-        },
-        function (result, next) {
-            record.keywords = result.keywords;
-            record.sentiment = result.sentiment;
-            db.insert(record, next);
-        },
-        function (result, headers, next) {
-            response.send(record);
-            return next();
-        }
-    ], callback);
+  async.waterfall([
+    // Get the input record from the DB
+    function (next) {
+      db.get(request.params.id, next);
+    },
+    // Analyze the transcript of the associated record
+    function (result, headers, next) {
+      record = result;
+      record.transcript = request.body.transcript;
+      analyzeTranscript(record.transcript, next);
+    },
+    // Get the keywords and sentiment of the transcript, then insert back into DB
+    function (result, next) {
+      record.keywords = result.keywords;
+      record.sentiment = result.sentiment;
+      db.insert(record, next);
+    },
+    // Send the updated record back to the agent (client)
+    function (result, headers, next) {
+      response.send(record);
+      return next();
+    }
+  ], callback);
 });
 
-function seedDB(callback) {
-    db = cloudant.use(dbName);
+//---Socket IO Handlers---------------------------------------------------------
+var io = require('socket.io')(server),
+    sessions = [],
+    sockets = [];
 
-    var dbEntries = [
-        {
-            "type": "purchase",
-            "customer": {
-                "name": "David Colson",
-                "email": "dcolson@gmail.com"
-            },
-            "item": {
-                "id": "101",
-                "name": "Light Blue Jeans",
-                "image": "http://i00.i.aliimg.com/wsphoto/v0/882138636/Mens-capri-jeans-Light-blue-Skinny-Whisker-Abrade-Cotton-Korean-style-Casual-Drop-shipping-1-Piece.jpg",
-                "price": "$75"
-            }
-        },
-        {
-            "type": "purchase",
-            "customer": {
-                "name": "David Colson",
-                "email": "dcolson@gmail.com"
-            },
-            "item": {
-                "id": "102",
-                "name": "Polo Shirt",
-                "image": "http://i00.i.aliimg.com/wsphoto/v0/359840214/Wholesale-Men-s-Polo-Shirts-Brand-Tshirt-T-Shirt-Tee-Shirt-Polo-Shirt-Fashion-Cotton-Polo.jpg",
-                "price": "$50"
-            }
-        },
-        {
-            "type": "purchase",
-            "customer": {
-                "name": "Jeff Davis",
-                "email": "jdavis@gmail.com"
-            },
-            "item": {
-                "id": "101",
-                "name": "Light Blue Jeans",
-                "image": "http://i00.i.aliimg.com/wsphoto/v0/882138636/Mens-capri-jeans-Light-blue-Skinny-Whisker-Abrade-Cotton-Korean-style-Casual-Drop-shipping-1-Piece.jpg",
-                "price": "$75"
-            },
-            "transcript": "I am really upset with these blue jeans that I bought from Macy's" +
-                " in Hoboken the other day. The jeans were ripped on the inseam and there was dark" +
-                " blue dye all along the buttocks region in the inside of the jeans. Is this normally" +
-                " an issue with this item? Ok, but how do I get a refund for these jeans?",
-            "keywords": [
-                {
-                  "text": "blue jeans"
-                },
-                {
-                  "text": "dark blue dye"
-                },
-                {
-                  "text": "department store"
-                },
-                {
-                  "text": "New Jersey"
-                },
-                {
-                  "text": "Hoboken"
-                },
-                {
-                  "text": "item"
-                },
-                {
-                  "text": "refund"
-                },
-            ],
-            "sentiment": {"type": "negative"},
-            "preventDelete": true
-        },
-        {
-            "productId": "102",
-            "reviewInvestment": "true",
-            "user": "Brooke",
-            "replyLink": "https://workflow.ng.bluemix.net:443/2b082f1f-9d77-4029-a9ca-32da43630adc/myworkflow/productsWorkflow/PI-1-c777010d-eb8b-45bc-acce-e4b4e41bbec1/decision",
-            "type": "task",
-            "preventDelete": true,
-            "item": {
-                "id": "102",
-                "name": "Polo Shirt",
-                "image": "http://i00.i.aliimg.com/wsphoto/v0/359840214/Wholesale-Men-s-Polo-Shirts-Brand-Tshirt-T-Shirt-Tee-Shirt-Polo-Shirt-Fashion-Cotton-Polo.jpg",
-                "price": "$50"
-            }
-        },
-        {
-            "productId": "101",
-            "name": "Light Blue Jeans",
-            "image": "http://i00.i.aliimg.com/wsphoto/v0/882138636/Mens-capri-jeans-Light-blue-Skinny-Whisker-Abrade-Cotton-Korean-style-Casual-Drop-shipping-1-Piece.jpg",
-            "price": "$75",
-            "type": "item"
-        },
-        {
-            "productId": "102",
-            "name": "Polo Shirt",
-            "image": "http://i00.i.aliimg.com/wsphoto/v0/359840214/Wholesale-Men-s-Polo-Shirts-Brand-Tshirt-T-Shirt-Tee-Shirt-Polo-Shirt-Fashion-Cotton-Polo.jpg",
-            "price": "$50",
-            "type": "item"
-        }
-    ];
+var socketLog = function(id) {
+  return [
+    '[socket.id:', id,
+    sessions[id] ? ('session:' + sessions[id].cookie_session) : '', ']: '
+  ].join(' ');
+};
 
-    async.waterfall([
-        function (next) {
-            var designDocs = [
-                {
-                    _id: '_design/purchases',
-                    views: {
-                        all: {
-                            map: function (doc) { if (doc.type === 'purchase') { emit(doc._id, doc); } }
-                        },
-                        item: {
-                            map: function (doc) { if (doc.type === 'purchase') { emit(doc.item.name, doc); } }
-                        },
-                        itemId: {
-                            map: function (doc) { if (doc.type === 'purchase') { emit(doc.item.id, doc); } }
-                        },
-                        customer: {
-                            map: function (doc) { if (doc.type === 'purchase') { emit(doc.customer.name, doc); } }
-                        },
-                        transcripts: {
-                            map: function (doc) { if (doc.type === 'purchase' && doc.transcript) { emit(doc.item.name, doc); } }
-                        }
-                    }
-                },
-                {
-                    _id: '_design/tasks',
-                    views: {
-                        all: {
-                            map: function (doc) { if (doc.type === 'task') { emit(doc._id, doc); } }
-                        }
-                    }
-                },
-           ];
+var observe_results = function(socket, recognize_end) {
+  var session = sessions[socket.id];
+  return function(err, chunk) {
+    if (err) {
+      console.error(socketLog(socket.id), 'error:', err);
+      socket.emit('onerror', {
+        error: err
+      });
+      session.req.end();
+      socket.disconnect();
+    }
+    else {
+      var transcript = (chunk && chunk.results && chunk.results.length > 0);
 
-            async.each(designDocs, db.insert, next);
-        },
-        function (next) {
-            async.each(dbEntries, db.insert, next);
-        },
-        function (next) {
-            console.log("Created DB", dbName, "and populated it with initial purchases");
-            next();
-        }
-    ], callback)
-}
+      if (transcript && !recognize_end) {
+        //socket.emit('speech', chunk);
+        emitSocketEvents ('speech', chunk);
+      }
+      if (recognize_end) {
+        console.log(socketLog(socket.id), 'results:', JSON.stringify(chunk, null, 2));
+        console.log('socket.disconnect()');
+        socket.disconnect();
+      }
+    }
+  };
+};
 
-var port = process.env.VCAP_APP_PORT || 3000;
-server.listen(port, function() {
-    var dbCreated = false;
-    Cloudant({account:cloudantCreds.username, password:cloudantCreds.password}, function(er, dbInstance) {
-        cloudant = dbInstance;
-        if (er) {
-            return console.log('Error connecting to Cloudant account %s: %s', me, er.message);
-        }
-
-        console.log('Connected to cloudant');
-        cloudant.ping(function(er, reply) {
-            if (er) {
-                return console.log('Failed to ping Cloudant. Did the network just go down?');
-            }
-
-            console.log('Server version = %s', reply.version);
-            console.log('I am %s and my roles are %j', reply.userCtx.name, reply.userCtx.roles);
-
-            cloudant.db.list(function(er, all_dbs) {
-                if (er) {
-                    return console.log('Error listing databases: %s', er.message);
-                }
-
-                console.log('All my databases: %s', all_dbs.join(', '));
-
-                _.each(all_dbs, function(name) {
-                    if (name === dbName) {
-                        dbCreated = true;
-                    }
-                });
-                if (dbCreated === false) {
-                    cloudant.db.create(dbName, seedDB);
-                }
-                else {
-                    db = cloudant.db.use(dbName);
-                    console.log("DB", dbName, "is already created");
-                }
-            });
-        });
-    });
+// Create a session on socket connection
+io.use(function(socket, next) {
+  speechToText.createSession({}, function(err, session) {
+    if (err) {
+      console.error("The server could not create a session on socket ", socket.id);
+      console.error(err);
+      next(new Error('The server could not create a session'));
+    }
+    else {
+      sessions[socket.id] = session;
+      sessions[socket.id].open = false;
+      sockets[socket.id] = socket;
+      console.log(socketLog(socket.id), 'created session');
+      console.log('The system now has:', Object.keys(sessions).length, 'sessions.');
+      socket.emit('session', session.session_id);
+      next();
+    }
+  });
 });
-console.log('listening at:', port);
 
-function analyzeTranscripts() {
+io.on('connection', function(socket) {
+  var session = sessions[socket.id];
 
-    async.waterfall([
-        function (next) {
-            db.view("visits", "all", next);
-        },
-        function (body, headers, next) {
-            async.each(body.rows, analyzeTranscript, next);
-        }
+  // Catch socket.io speech payload
+  socket.on('speech', function(data) {
+    // If session is not open, post and get speech-to-text results
+    if (!session.open) {
+      session.open = true;
+      var payload = {
+        session_id: session.session_id,
+        cookie_session: session.cookie_session,
+        content_type: 'audio/l16; rate=' + (data.rate || 48000),
+        continuous: true,
+        interim_results: true
+      };
+      // POST /recognize to send data in every message we get
+      session.req = speechToText.recognizeLive(payload, observe_results(socket, true));
+      // GET /observeResult to get live transcripts
+      speechToText.observeResult(payload, observe_results(socket, false));
+    }
+    else {
+      session.req.write(data.audio);
+    }
+  });
 
-    ], function(error) {
-        if (error) {
-            console.log(error);
-        }
-        return;
+  // Speech session was disconnected
+  socket.on('speech_disconnect', function(data) {
+    var session = sessions[socket.id];
+    session.req.end();
+  });
+
+  // Delete the session on disconnect
+  socket.on('disconnect', function() {
+    speechToText.deleteSession(session, function() {
+      delete sessions[socket.id];
+      delete sockets[socket.id];
+      console.log(socketLog(socket.id), 'delete_session');
     });
+  });
+});
 
+// Emit input eventType socket event
+function emitSocketEvents (eventType, data) {
+  for (var value in sockets) {
+    sockets[value].emit(eventType, data);
+  }
 }
 
-function analyzeTranscript(transcript, callback) {
-
-    var response = {};
-
-    async.waterfall([
-        function (next) {
-            console.log("Extracting keywords");
-            alchemy.keywords(transcript, {}, next);
-        },
-        function (result, next) {
-            //TODO match keyword to existing items
-            console.log("keywords", result);
-            console.log("Extracting sentiment");
-            response.keywords = result.keywords;
-            alchemy.sentiment(transcript, {}, next);
-        },
-        function (result, next) {
-            console.log("sentiment", result);
-            if (result.docSentiment.type === "neutral" || result.docSentiment.type  === "negative") {
-                feedbackScore--;
-            }
-            else {
-                feedbackScore++;
-            }
-            response.sentiment = result.docSentiment;
-
-            console.log("The feedback score for", "101", "is", feedbackScore);
-
-            var json = {
-                "theProduct": {
-                    "id": "101",
-                    "feedbackScore": feedbackScore
-                }
-            };
-            var businessRulesCreds = getServiceCreds(appEnv, "assistant-shop-r-rules");
-            var options = {
-                username: businessRulesCreds.user,
-                password: businessRulesCreds.password
-            };
-            var url = businessRulesCreds.executionRestUrl + "/productsRuleApp/1.0/productsRuleProject/json";
-            restler.postJson(url, json, options).on('complete', function(data) {
-                console.log(data);
-                if (data.theProduct.needsInvestmentReview === true || data.theProduct.needsDivestmentReview === true) {
-                    var workflowCreds = getServiceCreds(appEnv, "assistant-shop-r-workflow");
-                    var options = {
-                        "username": workflowCreds.user,
-                        "password": workflowCreds.password,
-                    };
-
-                    var reviewInvestment = "false";
-
-                    if (data.theProduct.needsInvestmentReview === true) {
-                        reviewInvestment = "true";
-                    }
-
-                    console.log("Product", json.theProduct.id, "needs reviewInvestment", reviewInvestment);
-
-                    var url = workflowCreds.url.replace("/info","") + "/myworkflow/productsWorkflow/_/start" +
-                        "?productId=" + json.theProduct.id + "&feedbackScore=" + json.theProduct.feedbackScore + "&reviewInvestment=" + reviewInvestment;
-                    console.log(url);
-                    restler.get(url, options).on('complete', function(data) {
-                        console.log("finished calling the workflow service");
-                        next(null, response);
-                    });
-                }
-                else {
-                    next(null, response);
-                }
-            });
-        }
-    ], callback);
-}
-
+//---Server Functions-----------------------------------------------------------
 // Ensures an input service is found in VCAPS
 // If found, returns the service credentials
 function getServiceCreds(appEnv, serviceName) {
@@ -506,4 +445,100 @@ function getServiceCreds(appEnv, serviceName) {
     return null;
   }
   return serviceCreds;
+}
+
+// Analyze the input transcript for sentiment and keywords
+function analyzeTranscript(transcript, callback) {
+  var response = {
+    transcript: transcript
+  };
+
+  async.waterfall([
+    // Extract keywords from the input transcript
+    function (next) {
+      console.log("Extracting keywords");
+      alchemy.keywords(transcript, {}, next);
+    },
+    // Get overall sentiment of the transcript
+    function (result, next) {
+      //TODO match keyword to existing items
+      console.log("Keywords:", result);
+      console.log("Analyzing sentiment");
+      response.keywords = result.keywords;
+      alchemy.sentiment(transcript, {}, next);
+    },
+    function (result, next) {
+      console.log("sentiment", result);
+
+      // Increment/decrement feedback score based on sentiment
+      if (result.docSentiment.type === "neutral" || result.docSentiment.type  === "negative") {
+        feedbackScore--;
+      }
+      else {
+        feedbackScore++;
+      }
+      response.sentiment = result.docSentiment;
+      console.log("The feedback score for", "Product 101", "is", feedbackScore);
+
+      // Create object to pass to the business rules service
+      var json = {
+        "theProduct": {
+          "id": "102",
+          "feedbackScore": feedbackScore
+        }
+      };
+
+      // Call the business rules service
+      restler.postJson(rulesUrl, json, rulesOptions).on('complete', function(data) {
+        console.log("Rules results:", data);
+
+        // If rules says to review the product for investment/divestment, start a new process
+        if (data.theProduct.needsInvestmentReview === true || data.theProduct.needsDivestmentReview === true) {
+          var reviewInvestment;
+          if (data.theProduct.needsInvestmentReview === true) {
+            reviewInvestment = "true";
+            console.log("Product", json.theProduct.id, "needs an investment review");
+          }
+          else {
+            reviewInvestment = "false";
+            console.log("Product", json.theProduct.id, "needs a divestment review");
+          }
+
+          // Invoke the workflow service and create a new process
+          var url = workflowCreds.url.replace("/info","") + "/myworkflow/productsWorkflow/_/start" +
+            "?productId=" + json.theProduct.id + "&feedbackScore=" + json.theProduct.feedbackScore + "&reviewInvestment=" + reviewInvestment;
+          restler.get(url, workflowOptions).on('complete', function(data) {
+            console.log("Created new process in Workflow");
+            console.log(data);
+            next(null, response);
+          });
+        }
+        else {
+          next(null, response);
+        }
+      });
+    }
+  ], callback);
+}
+
+// Set up the DB to default status
+function seedDB(callback) {
+  db = cloudant.use(dbName);
+
+  async.waterfall([
+    // If designated, retrieve and insert design docs
+    function (next) {
+      var designDocs = require("./config/starter_docs/design-docs.json");
+      async.each(designDocs, db.insert, next);
+    },
+    // Retrieve and insert starter data docs
+    function (next) {
+      var sampleDataDocs = require("./config/starter_docs/sample-data-docs.json");
+      async.each(sampleDataDocs, db.insert, next);
+    },
+    function (next) {
+      console.log("Created DB", dbName, "and populated it with starter docs");
+      next();
+    }
+  ], callback);
 }

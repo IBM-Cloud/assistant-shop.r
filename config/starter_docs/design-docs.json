@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "_design/purchases",
+    "views": {
+      "all": {
+        "map": "function (doc) { if (doc.type === 'purchase') { emit(doc._id, doc); } }"
+      },
+      "item": {
+        "map": "function (doc) { if (doc.type === 'purchase') { emit(doc.item.name, doc); } }"
+      },
+      "itemId": {
+        "map": "function (doc) { if (doc.type === 'purchase') { emit(doc.item.id, doc); } }"
+      },
+      "customer": {
+        "map": "function (doc) { if (doc.type === 'purchase') { emit(doc.customer.name, doc); } }"
+      },
+      "transcripts": {
+        "map": "function (doc) { if (doc.type === 'purchase' && doc.transcript) { emit(doc.item.name, doc); } }"
+      }
+    }
+  },
+  {
+    "_id": "_design/tasks",
+    "views": {
+      "all": {
+        "map": "function (doc) { if (doc.type === 'task') { emit(doc._id, doc); } }"
+      }
+    }
+  }
+]

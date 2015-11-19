@@ -1,5 +1,7 @@
 node_modules
 uploads/
 public/vendor/*
-Assistant_Shopper_Pitch.key
+npm-debug.log
+architecture-diagram.png
+productRules.zip
 .env

@@ -143,6 +143,10 @@ hr {
     border-bottom-right-radius: 10px;
 }
 
+.controls {
+  display: none;
+}
+
 .item:last-child {
   background-color: white;
   border-bottom: 1px solid #e8e8e8;
@@ -167,6 +171,7 @@ hr {
 
 .video, .transcript {
   margin-top: 15px;
+  display: none;
 }
 
 .video video {

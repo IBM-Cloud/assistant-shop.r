@@ -31,9 +31,6 @@
             <img class="panel-icon" src="images/rating-star.png" alt="Rate" />
             <img class="panel-icon" src="images/feedback.png" alt="Feedback" />
             <img class="panel-icon support" src="images/video-camera.png" alt="Customer Support" data-purchase="{value._id}" />
-            <!--<a href="#" data-purchase="{value._id}" class="panel-btn btn btn-default">
-                <span class="glyphicon glyphicon-facetime-video"></span>&nbsp;Video Chat with Customer Service
-            </a>-->
         </div>
         {?value.item.transcript}
         <h5>Transcription:</h5>
@@ -44,16 +41,16 @@
         </div>
         {/value.item.transcript}
         <div class="row controls">
-            <div class="col-md-10"> </div>
-            <a href="#" class="btn btn-default col-md-1 end-call">
+            <div class="col-lg-5 col-md-5 col-sm-5 col-xs-4"></div>
+            <a href="#" class="btn btn-default col-lg-2 col-md-2 col-sm-2 col-xs-4 end-call">
                 <span class="glyphicon glyphicon-facetime-video"></span>
                 &nbsp;End Call
             </a>
         </div>
         <div class="row video">
             <div class="col-md-1"> </div>
-            <div class="col-md-5 local-video"></div>
-            <div class="col-md-5 remote-video"></div>
+            <div id="local-video" class="col-md-5 local-video"></div>
+            <div id="remote-video" class="col-md-5 remote-video"></div>
             <div class="col-md-1"> </div>
         </div>
         <div class="row transcript">

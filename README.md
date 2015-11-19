@@ -1,44 +1,41 @@
-# Overview
+# Assistant Shop.r Overview
 
 What if customer feedback automatically drove business decisions?
 
 Customer feedback contains invaluable insight into client satisfaction. Assistant Shop.r enables a department store to analyze aggregated customer feedback and consumer behavior in order to enable their buyers to make smarter purchasing decisions.
 
-In this demo, a video call (using the new [Twilio video API] [twilio_video_url]) is held between a customer and a customer service agent. As the video call is happening [IBM Watson Speech to Text] [speech_to_text_url] service is transcribing the audio in real time. After the video call completes, [Alchemy API] [alchemy_api_url] is used to automatically determine which product the customer was giving feedback on and then determines the sentiment of that feedback. The corresponding product's feedback score, a number between 0 and 100, fluctuates based on this feedback. After the score is updated, Business Rules are invoked to determine if the product has crossed a threshold to automatically suggest a review of investment in the product. If the rules suggest a review, a process instance for a change in product investment is then started and managed by the Bluemix Workflow service. This creates a task for a buyer at the company. The buyer can then decide whether to ignore or go through with the review, thus completing the process.
+In this demo, a video call (using the new [Twilio video API] [twilio_video_url]) is held between a customer and a customer service agent. As the video call is happening [IBM Watson Speech to Text] [speech_to_text_url] service is transcribing the audio in real time. After the video call completes, [AlchemyLanguage API] [alchemy_api_url] is used to automatically determine which product the customer was giving feedback on and then determines the sentiment of that feedback. The corresponding product's feedback score, a number between 0 and 100, fluctuates based on this feedback. After the score is updated, Business Rules are invoked to determine if the product has crossed a threshold to automatically suggest a review of investment in the product. If the rules suggest a review, a process instance for a change in product investment is then started and managed by the Bluemix Workflow service. This creates a task for a buyer at the company. The buyer can then decide whether to ignore or go through with the review, thus completing the process.
 
-[![Youtube - App Overview](https://www.youtube.com/watch?v=EcOryuaGYCI)](http://www.youtube.com/watch?v=EcOryuaGYCI)
-
-Video - https://www.youtube.com/watch?v=EcOryuaGYCI
+Video Walkthrough - https://www.youtube.com/watch?v=EcOryuaGYCI
 
 [![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy)
 
-**Note:** If deploying by this method, the app will fail on first deploy. After this initial failure, you must complete steps 12-17 as described in the section 'Running the app on Bluemix', as well as configure your business rules and workflow. Only then will your app start successfully.
+**Note:** If deploying by this method, the app will fail on first deploy. After this initial failure, you must complete steps 12-18 as described in the section 'Running the app on Bluemix', as well as configure your business rules and workflow. Only then will your app start successfully.
 
-[![Build Status](https://codeship.com/projects/5be9a2b0-f58e-0132-c56e-36e59e59a064/status?branch=master)](https://codeship.com/projects/5be9a2b0-f58e-0132-c56e-36e59e59a064/status?branch=master)
+## Application Requirements
+This application requires two machines to run through the demo. The users need to be running either the Firefox or Chrome browser for the demo to function properly.
 
-## How it Works
+## How it Work
 
-**Note:** This application requires two laptops to use it.  The person that is the customer service agent needs to be running on **Firefox 35**.  Later versions might work but this is not guaranteed. The person acting as the customer can use **Chrome or Firefox**.
-
-1. Have the first person open a web browser and go to [https://yourhostname.mybluemix.net/agent](https://yourhostname.mybluemix.net/agent) on a Firefox browser (ie. [https://assistant-shop-r.mybluemix.net/agent] [demo_agent_url]).
+1. Have the first person open a web browser and go to [https://assistant-shop-r.mybluemix.net/agent] [demo_agent_url]. They will play the role of the agent.
 
 2. Click "Go Online" at the top.
 
-3. Have the second person open a web browser and go to [https://yourhostname.mybluemix.net/](https://yourhostname.mybluemix.net/) on a Firefox or Chrome browser (ie. [https://assistant-shop-r.mybluemix.net/][demo_customer_url]).
+3. Have the second person open a web browser on another machine and go to [https://assistant-shop-r.mybluemix.net/][demo_customer_url]. They will play the role of the customer.
 
-4. Click the camera icon for one of the products, you will get an alert asking for permission to your microphone and camera, agree and say yes.
+4. Click the camera icon for one of the products, you will get an alert asking for permission to use your microphone and camera. Allow permission.
 
-5. The first person will then get an alert asking for permission to the microphone and camera, agree and say yes.
+5. The agent will then get an alert asking for permission to their microphone and camer. Allow permission as well.
 
-6. The second person should speak some text and it will be transcribed in real time for the first person (the agent).
+6. The customer should speak some text and it will be transcribed in real time for the second person (the agent).
 
 7. One of the two people click "End call".
 
-8. The first person, the agent, will see keywords extracted from the conversation transcript and overall sentiment, determine by the AlchemyLanguage API
+8. The agent will see keywords extracted from the conversation transcript and overall sentiment, determined by the AlchemyLanguage API
 
-9. Behind the scenes, business rules and a workflow are then called to automatically determine whether an investment review needs to be triggered.
+9. Behind the scenes, business rules and a workflow are invoked to automatically determine whether an investment review needs to be triggered.
 
-10. Open a web browser and go to [https://yourhostname.mybluemix.net/tasks](https://yourhostname.mybluemix.net/tasks) (ie. [https://assistant-shop-r.mybluemix.net/tasks][demo_tasks_url]). You will see a task for the customers feedback. Here you can either review or ignore the automated feedback, click one of the two links.
+10. Open a web browser and go to [https://assistant-shop-r.mybluemix.net/tasks][demo_tasks_url]. If a review was triggered by your conversation, you will see a new task as a result of the customer's feedback.
 
 ### Check out the app
 
@@ -75,7 +72,7 @@ Video - https://www.youtube.com/watch?v=EcOryuaGYCI
 	-  name: assistant-shop-r-sample
 	   command: node app.js
 	   runtime: node12
-	   memory: 256M
+	   memory: 512M
 	   instances: 1
 	   host: assistant-shop-r-sample
 	```
@@ -125,11 +122,13 @@ Video - https://www.youtube.com/watch?v=EcOryuaGYCI
 
 14. Go to the Bluemix catalog, create a Twilio service using the credentials from step 13, and choose to bind it to your new application.
 
-15. Next, you need to provision an Alchemy API key if you do not have one already. You can do this [here] [alchemy_signup_url].
+15. Currently, Twilio Video is in beta, so you will need to request access to the beta program before this functionality is available to you.
 
-16. Shortly after you complete step 15, you will receive an email containing the API key. Once you get the email, go to the Bluemix catalog, create an Alchemy API service using this key, and choose to bind it to your new application.
+16. Next, you need to provision an Alchemy API key if you do not have one already. You can do this [here] [alchemy_signup_url].
 
-17. Finally, we need to restage our app to ensure these env variables changes took effect.
+17. Shortly after you complete step 16, you will receive an email containing the API key. Once you get the email, go to the Bluemix catalog, create an Alchemy API service using this key, and choose to bind it to your new application.
+
+18. Finally, we need to restage our app to ensure these env variables changes took effect.
 
   ```sh
   $ cf restage APP_NAME
@@ -192,7 +191,7 @@ Your RuleApp should now be successfully deployed to your business rules service 
 
 3. Go to [IBM Bluemix DevOps Services] [jazzhub_url] and create a new project. Give it a name, select 'Create a new repository', select 'Create a Git repo on Bluemix', and click **Create**.
 
-4. Once the project has been created, click **Edit Code** in the top-right. In the edit code perspective, click **File > New > File** and name it **productsFlow.jsflow**.
+4. Once the project has been created, click **Edit Code** in the top-right. In the edit code perspective, click **File > New > File** and name it **productsWorkflow.jsflow**.
 
 5. Copy the following gist to this new file and save.
 
@@ -202,35 +201,37 @@ Your RuleApp should now be successfully deployed to your business rules service 
 
 Your workflow should now be successfully deployed to your workflow service instance! To confirm this, navigate to your workflow service and click **Launch Admin Console**. You can find your deployed workflows and corresponding process instances here.
 
-### Troubleshooting
+## Troubleshooting
 
-To troubleshoot your Bluemix app the main useful source of information is the logs. To see them, run:
+The primary source of debugging information for your Bluemix app is the logs. To see them, run the following command using the Cloud Foundry CLI:
 
-  ```sh
-  $ cf logs <application-name> --recent
   ```
+  $ cf logs assistant-shop-r --recent
+  ```
+For more detailed information on troubleshooting your application, see the [Troubleshooting section](https://www.ng.bluemix.net/docs/troubleshoot/tr.html) in the Bluemix documentation.
 
-### Privacy Notice
+## Privacy Notice
+<If you are using the deployment tracker, you must include a privacy notice to let the user know that we are collecting deployment data.>
 
-The Assistant Shop.r sample web application includes code to track deployments to Bluemix and other Cloud Foundry platforms. The following information is sent to a [Deployment Tracker] [deploy_track_url] service on each deployment:
+The 'AppName' sample web application includes code to track deployments to Bluemix and other Cloud Foundry platforms. The following information is sent to a [Deployment Tracker](https://github.com/cloudant-labs/deployment-tracker) service on each deployment:
 
-* Application Name (`application_name`)
-* Space ID (`space_id`)
-* Application Version (`application_version`)
-* Application URIs (`application_uris`)
+* Application Name (application_name)
+* Space ID (space_id)
+* Application Version (application_version)
+* Application URIs (application_uris)
 
-This data is collected from the `VCAP_APPLICATION` environment variable in IBM Bluemix and other Cloud Foundry platforms. This data is used by IBM to track metrics around deployments of sample applications to IBM Bluemix. Only deployments of sample applications that include code to ping the Deployment Tracker service will be tracked.
+This data is collected from the VCAP_APPLICATION environment variable in IBM Bluemix and other Cloud Foundry platforms. This data is used by IBM to track metrics around deployments of sample applications to IBM Bluemix. Only deployments of sample applications that include code to ping the Deployment Tracker service will be tracked.
 
 ### Disabling Deployment Tracking
 
-Deployment tracking can be disabled by removing `"install": "node admin.js track"` from the `scripts` section within `package.json`.
+Deployment tracking can be disabled by removing `require("cf-deployment-tracker-client").track();` from the beginning of the `app.js` file.
 
 [demo_customer_url]: https://assistant-shop-r.mybluemix.net/
 [demo_tasks_url]: https://assistant-shop-r.mybluemix.net/tasks
 [demo_agent_url]: https://assistant-shop-r.mybluemix.net/agent
 [twilio_video_url]: https://www.twilio.com/video
 [speech_to_text_url]: http://www.ibm.com/smarterplanet/us/en/ibmwatson/developercloud/speech-to-text.html
-[alchemy_api_url]: http://www.alchemyapi.com/
+[alchemy_api_url]: http://www.alchemyapi.com/products/alchemylanguage
 [bluemix_signup_url]: https://console.ng.bluemix.net/?cm_mmc=GitHubReadMe-_-BluemixSampleApp-_-Node-_-Workflow
 [twilio_signup_url]: https://www.twilio.com/try-twilio
 [alchemy_signup_url]: http://www.alchemyapi.com/api/register.html
@@ -239,5 +240,4 @@ Deployment tracking can be disabled by removing `"install": "node admin.js track
 [workflow_plugin_url]: https://hub.jazz.net/code/settings/settings.html#,category=plugins,installPlugin=https://workflow.ng.bluemix.net/workflow/devOpsServices/workflowPlugin.html
 [workflow_settings_url]: https://hub.jazz.net/code/settings/settings.html#,category=Workflow
 [project_gists_url]: https://gist.github.com/JakePeyser/9527612cf9b5d13e0400
-[deploy_track_url]: https://github.com/ibm-cds-labs/deployment-tracker
 [jazzhub_url]: https://hub.jazz.net/

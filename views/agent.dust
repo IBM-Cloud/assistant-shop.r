@@ -53,7 +53,7 @@
             {@select key=value.sentiment.type }
                 {@eq value="neutral"}<span class="glyphicon glyphicon-thumbs-down"> </span>{/eq}
                 {@eq value="negative"}<span class="glyphicon glyphicon-thumbs-down"> </span>{/eq}
-                {@default}<span class="glyphicon glyphicon-thumbs-up"> </span>{/default}
+                {@eq value="positive"}<span class="glyphicon glyphicon-thumbs-up"> </span>{/eq}
             {/select}
             )</span>
             {/value.sentiment.type}
@@ -64,7 +64,7 @@
                 </div>
             </div>
             {?value.keywords}
-            <p class="feedback-title">Feedback keywords:</p>
+            <p class="feedback-title">Feedback Keywords:</p>
             <div class="tags">
                 {#value.keywords}
                 <span class="tag" data-name="{text}">{text} </span>
@@ -74,16 +74,16 @@
         </div>
         {/value.transcript}
         <div class="row controls">
-            <div class="col-md-10"> </div>
-            <a href="#" class="btn btn-default col-md-1 end-call">
+            <div class="col-lg-5 col-md-5 col-sm-5 col-xs-4"></div>
+            <a href="#" class="btn btn-default col-lg-2 col-md-2 col-sm-2 col-xs-4 end-call">
                 <span class="glyphicon glyphicon-facetime-video"></span>
                 &nbsp;End Call
             </a>
         </div>
         <div class="row video">
             <div class="col-md-1"> </div>
-            <div class="col-md-5 local-video"></div>
-            <div class="col-md-5 remote-video"></div>
+            <div id="local-video" class="col-md-5 local-video"></div>
+            <div id="remote-video" class="col-md-5 remote-video"></div>
             <div class="col-md-1"> </div>
         </div>
         <div class="transcript">

@@ -16,7 +16,8 @@ applications:
 - name: assistant-shop-r
   command: node app.js
   path: .
-  memory: 256m
+  memory: 512m
+  instances: 1
   services:
   - assistant-shop-r-rules
   - assistant-shop-r-workflow
