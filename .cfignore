@@ -4,4 +4,5 @@ public/vendor/*
 npm-debug.log
 architecture-diagram.png
 productRules.zip
+vcap-local.json
 .env

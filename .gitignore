@@ -3,4 +3,5 @@ uploads/
 .DS_Store
 npm-debug.log
 public/vendor/*
+vcap-local.json
 .env

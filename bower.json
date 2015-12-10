@@ -1,7 +1,7 @@
 {
-  "name": "stopHunger",
-  "version": "0.1.0",
-  "private": true,
+  "name": "assistant-shop.r",
+  "version": "0.0.1",
+  "private": false,
   "ignore": [
     "**/.*",
     "node_modules",

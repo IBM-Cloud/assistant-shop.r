@@ -12,12 +12,12 @@ Video Walkthrough - https://www.youtube.com/watch?v=EcOryuaGYCI
 
 ![Bluemix Deployments](https://deployment-tracker.mybluemix.net/stats/33c837adc45603261cd15deadadc2317/badge.svg)
 
-**Note:** If deploying by this method, the app will fail on first deploy. After this initial failure, you must complete steps 12-18 as described in the section 'Running the app on Bluemix', as well as configure your business rules and workflow. Only then will your app start successfully.
+**Note:** If deploying by this method, the app will fail on first deploy. After this initial failure, you must complete steps 12-16 as described in the section 'Running the app on Bluemix', as well as configure your business rules and workflow. Only then will your app start successfully.
 
 ## Application Requirements
 This application requires two machines to run through the demo. The users need to be running either the Firefox or Chrome browser for the demo to function properly.
 
-## How it Work
+## How it Works
 
 1. Have the first person open a web browser and go to [https://assistant-shop-r.mybluemix.net/agent] [demo_agent_url]. They will play the role of the agent.
 
@@ -53,9 +53,7 @@ This application requires two machines to run through the demo. The users need t
 
 ## Running the app on Bluemix
 
-1. Create a Bluemix Account
-
-    [Sign up][bluemix_signup_url] for Bluemix, or use an existing account.
+1. [Sign up for Bluemix][bluemix_signup_url] or use your existing account.
 
 2. Download and install the [Cloud-foundry CLI][cloud_foundry_url] tool
 
@@ -65,18 +63,18 @@ This application requires two machines to run through the demo. The users need t
   git clone https://github.com/IBM-Bluemix/assistant-shop.r.git
   ```
 
-4. cd into this newly created directory
+4. `cd` into this newly created directory
 
 5. Edit the `manifest.yml` file and change the `<application-name>` and `<application-host>` to something unique.
 
 	```
 	applications:
-	-  name: assistant-shop-r-sample
+	-  name: assistant-shop-r
+		host: assistant-shop-r
 	   command: node app.js
 	   runtime: node12
 	   memory: 512M
 	   instances: 1
-	   host: assistant-shop-r-sample
 	```
 
   The host you use will determinate your application url initially, e.g. `<application-host>.mybluemix.net`.
@@ -88,10 +86,12 @@ This application requires two machines to run through the demo. The users need t
 	$ cf login
 	```
 
+	**Note**: Several of the services in the following steps may produce warnings when you create them, alerting you that they are not entirely free. Creating and demoing this app leaves you well within the limits of your free quota, however, always remain cognizant of your monthly service usage.
+
 7. Create the Speech to Text service in Bluemix.
 
   ```
-  $ cf create-service speech_to_text Standard assistant-shop-r-speech-to-text
+  $ cf create-service speech_to_text standard assistant-shop-r-speech-to-text
   ```
 
 8. Create the Cloudant service in Bluemix.
@@ -111,29 +111,25 @@ This application requires two machines to run through the demo. The users need t
   ```
   $ cf create-service Workflow standard assistant-shop-r-workflow
   ```
-
-11. Push it to Bluemix. We need to perform additional steps once it is deployed, so we will add the option --no-start argument
+  
+11. Create the AlchemyAPI service in Bluemix.
 
   ```
-  $ cf push --no-start
+  $ cf create-service alchemy_api free assistant-shop-r-alchemy
   ```
 
 12. Next, you need to sign up for a Twilio developer account if you do not have one already. You can do this [here] [twilio_signup_url].
 
-13. Once you have created an account, navigate to your account page. Take note of your Account SID and AuthToken on this page, as you will need it to plug in as your credentials for accessing Twilio's REST API from within Bluemix.
+13. Once you have created an account, navigate to [your account page][twilio_account_url]. Take note of your Live Account SID and AuthToken on this page, as you will need it to plug in as your credentials for accessing Twilio's API from within Bluemix.
 
-14. Go to the Bluemix catalog, create a Twilio service using the credentials from step 13, and choose to bind it to your new application.
+14. Go to the Bluemix catalog, select the Twilio service, choose to leave it unbound, name it `assistant-shop-r-twilio`, populate Account SID and Auth Token using your credentials from step 13, and finally click Create.
 
-15. Currently, Twilio Video is in beta, so you will need to request access to the beta program before this functionality is available to you.
+15. Currently, Twilio Video is in beta, so you will need to [request access to the beta program][twilio_video_beta], designating that you would like access to the JavaScript SDK.
 
-16. Next, you need to provision an Alchemy API key if you do not have one already. You can do this [here] [alchemy_signup_url].
+16. Push your app to Bluemix
 
-17. Shortly after you complete step 16, you will receive an email containing the API key. Once you get the email, go to the Bluemix catalog, create an Alchemy API service using this key, and choose to bind it to your new application.
-
-18. Finally, we need to restage our app to ensure these env variables changes took effect.
-
-  ```sh
-  $ cf restage APP_NAME
+  ```
+  $ cf push
   ```
 
 And voila! You now have your very own instance of Assistant Shop.r running on Bluemix.
@@ -172,9 +168,9 @@ Before you get too excited, we are not done just yet! We still need to define wh
 
 6. Using the credentials found in step 5, we will now create a deployment target in Rule Designer:
 	* Click **File > New > Project > Rule Designer > Rule Execution Server Configuration Project** and then **Next**
-	* Specify a project name and then click **Next**
+	* Name your project 'Product Rule Execution Server Configuration' and then click **Next**
 	* Select **IBM WebSphere AS 8.5** as your applications server and click **Next**
-	* Set **URL**, **Login**, and **Password** to their corresponding values.
+	* Set **URL**, **Login**, and **Password** to their corresponding values from the Business Rules service console.
 	* Click **Test Connection** and you should get the message `Connection successful`. Click **Next**.
 	* Keep the default RuleApp deployment option selected and click **Finish** to close the wizard.
 
@@ -183,7 +179,7 @@ Before you get too excited, we are not done just yet! We still need to define wh
 	* Select the **Increment RuleApp major version** deployment type and then click **Next**.
 	* Keep the default selected target server radio button, select **IBM WebSphere AS 8.5**, and then click **Finish**.
 
-Your RuleApp should now be successfully deployed to your business rules service instance! To confirm this, first check your Eclipse console which should indicate a successful deployment. Then, return to your business rules service console and go to the **Decision Services** tab. You should see your recently deployed RuleApp as one of the available decision services.
+Your RuleApp should now be successfully deployed to your business rules service instance! To confirm this, first check your Eclipse console which should indicate a successful deployment. Then, return to your business rules service console and go to the **Decision Services** tab. You should see your recently deployed RuleApp as one of the available decision services. If not, be sure to hit the Refresh button to perform a fresh check.
 
 ### Configuring Workflow
 
@@ -191,11 +187,11 @@ Your RuleApp should now be successfully deployed to your business rules service 
 
 2. Navigate to your application in the Bluemix dashboard. Click on the workflow service and copy the configuration information at the bottom of the page. Then go [here] [workflow_settings_url], ensure 'Workflow service 1' is chosen in the dropdown, and paste the configuration info into the corresponding textbox. A notification stating `Workflow settings successfully updated` should appear at the top of the screen.
 
-3. Go to [IBM Bluemix DevOps Services] [jazzhub_url] and create a new project. Give it a name, select 'Create a new repository', select 'Create a Git repo on Bluemix', and click **Create**.
+3. Go to [IBM Bluemix DevOps Services] [jazzhub_url] and create a new project. Name it 'assistant-shop-r-workflow', select 'Create a new repository', select 'Create a Git repo on Bluemix', and click **Create**.
 
 4. Once the project has been created, click **Edit Code** in the top-right. In the edit code perspective, click **File > New > File** and name it **productsWorkflow.jsflow**.
 
-5. Copy the following gist to this new file and save.
+5. Copy the following gist to this new file, change `appname` on line 13 to your app's host name and save.
 
 	<script src="https://gist.github.com/JakePeyser/9527612cf9b5d13e0400.js?file=productsWorkflow.jsflow"></script>
 
@@ -213,9 +209,7 @@ The primary source of debugging information for your Bluemix app is the logs. To
 For more detailed information on troubleshooting your application, see the [Troubleshooting section](https://www.ng.bluemix.net/docs/troubleshoot/tr.html) in the Bluemix documentation.
 
 ## Privacy Notice
-<If you are using the deployment tracker, you must include a privacy notice to let the user know that we are collecting deployment data.>
-
-The 'AppName' sample web application includes code to track deployments to Bluemix and other Cloud Foundry platforms. The following information is sent to a [Deployment Tracker](https://github.com/cloudant-labs/deployment-tracker) service on each deployment:
+The Assistant Shop.r sample web application includes code to track deployments to Bluemix and other Cloud Foundry platforms. The following information is sent to a [Deployment Tracker](https://github.com/cloudant-labs/deployment-tracker) service on each deployment:
 
 * Application Name (application_name)
 * Space ID (space_id)
@@ -236,7 +230,8 @@ Deployment tracking can be disabled by removing `require("cf-deployment-tracker-
 [alchemy_api_url]: http://www.alchemyapi.com/products/alchemylanguage
 [bluemix_signup_url]: https://console.ng.bluemix.net/?cm_mmc=GitHubReadMe-_-BluemixSampleApp-_-Node-_-Workflow
 [twilio_signup_url]: https://www.twilio.com/try-twilio
-[alchemy_signup_url]: http://www.alchemyapi.com/api/register.html
+[twilio_account_url]: https://www.twilio.com/user/account/settings
+[twilio_video_beta]: https://www.twilio.com/video/request-early-access
 [eclipse_download_url]: http://www.eclipse.org/downloads/packages/eclipse-ide-java-ee-developers/junosr2
 [cloud_foundry_url]: https://github.com/cloudfoundry/cli
 [workflow_plugin_url]: https://hub.jazz.net/code/settings/settings.html#,category=plugins,installPlugin=https://workflow.ng.bluemix.net/workflow/devOpsServices/workflowPlugin.html
