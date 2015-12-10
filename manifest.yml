@@ -14,6 +14,7 @@ declared-services:
     plan: Shared
 applications:
 - name: assistant-shop-r
+  host: assistant-shop-r
   command: node app.js
   path: .
   memory: 512m
