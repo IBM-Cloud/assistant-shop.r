@@ -2,7 +2,7 @@
 declared-services:
   assistant-shop-r-speech-to-text:
     label: speech_to_text
-    plan: Standard
+    plan: standard
   assistant-shop-r-rules:
     label: businessrules
     plan: standard
@@ -12,6 +12,9 @@ declared-services:
   assistant-shop-r-db:
     label: cloudantNoSQLDB
     plan: Shared
+  assistant-shop-r-alchemy:
+    label: alchemy_api
+    plan: free
 applications:
 - name: assistant-shop-r
   host: assistant-shop-r
