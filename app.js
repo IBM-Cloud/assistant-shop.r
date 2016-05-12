@@ -61,10 +61,7 @@ var watson = require('watson-developer-cloud'),
 
 //---Set up Twilio--------------------------------------------------------------
 var twilio = require('twilio'),
-    twilioCreds = getServiceCreds(appEnv, "assistant-shop-r-twilio"),
-    twilioTokenUrl = "http://sat-token-generator.herokuapp.com/sat-token?" +
-      "AccountSid=" + twilioCreds.accountSID +
-      "&AuthToken=" + twilioCreds.authToken;
+    twilioCreds = getServiceCreds(appEnv, "assistant-shop-r-twilio");
 
 //---Set up AlchemyAPI----------------------------------------------------------
 var alchemyApi = require('alchemy-api'),
@@ -156,10 +153,31 @@ server.listen(appEnv.port, function() {
 
 //---Token Generators-----------------------------------------------------------
 app.get('/ntsToken/:name', function (request, response) {
-  var url = twilioTokenUrl + "&EndpointName=" + request.params.name;
-  restler.get(url).on('complete', function(data) {
-    response.send(data);
-  });
+var AccessToken = require('twilio').AccessToken;
+
+// Substitute your Twilio AccountSid and ApiKey details
+var API_KEY_SID = process.ENV.TWILIO_API_KEY;
+var API_KEY_SECRET = process.env.TWILIO_API_KEY_SECRET;
+
+// Create an Access Token
+var accessToken = new AccessToken(
+  twilioCreds.accountSID,
+  API_KEY_SID,
+  API_KEY_SECRET
+);
+
+// Set the Identity of this token
+accessToken.identity = request.params.name;
+
+// Grant access to Conversations
+var grant = new AccessToken.ConversationsGrant();
+grant.configurationProfileSid = process.env.TWILIO_PROFILE_SID;
+accessToken.addGrant(grant);
+
+// Serialize the token as a JWT
+var jwt = accessToken.toJwt();
+console.log(jwt);
+response.send(jwt);
 });
 
 // Get token using your credentials

@@ -8,7 +8,7 @@ var live,
     speech;
 
 // user and item variables
-var rowId = "05f29484a79f26982c787496729d55b7",
+var rowId = undefined,
     user = "shopr-agent",
     saved = false;
 
@@ -89,6 +89,8 @@ $(".go-online").on("click", function() {
   $(this).toggleClass("btn-success");
   var onlineInd = $(this).children(".text");
 
+  rowId = $($(".row.item.purchase")[0]).attr("data-purchase");
+
   // if offline, set status to online
   if (onlineInd.text().indexOf("Online") === -1) {
     onlineInd.text("    Online");
@@ -151,8 +153,9 @@ function conversationStarted(conversation) {
   });
 
   $(".end-call").on("click", function() {
-    if (activeConversation)
+    if (activeConversation) {
       endConversation();
+    }
     speech.stop();
   });
 };
@@ -178,8 +181,6 @@ function saveConversation() {
   // get the transcript
   var transcriptText = $("#collapse-" + rowId + " .transcript .local.text").text();
   console.log(transcriptText);
-  //===Local testing injection===
-  transcriptText = "Hello there I am very upset with my polo shirt. It is too tight and does not fit well please give me a refund.";
   $("#collapse-" + rowId + " .transcript .local.text").text(transcriptText);
 
   // analyze transcript and get back sentiment analysis and keywords

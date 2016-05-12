@@ -10,7 +10,7 @@ var recording,
 
 // user and item variables
 var agentName = "shopr-agent",
-    rowId = "05f29484a79f26982c787496729d55b7",
+    rowId = undefined,
     user = "caller";
 
 $(document).ready(function() {
@@ -61,6 +61,7 @@ $(document).ready(function() {
 
 // create a new conversation
 var startVideo = function() {
+  rowId = $(this).attr("data-purchase");
   // if a conversation is already occuring, do not allow another participant
   if (activeConversation) {
     //activeConversation.invite(agentName);
@@ -72,7 +73,7 @@ var startVideo = function() {
       options.localMedia = previewMedia;
     }
     // send an invite to chat to the agent
-    conversationsClient.createConversation(agentName, options).then(
+    conversationsClient.inviteToConversation(agentName, options).then(
       conversationStarted,
       function (error) {
         console.error('Unable to create conversation', error);
@@ -119,6 +120,13 @@ function conversationStarted(conversation) {
   conversation.on('ended', function (conversation) {
     if (activeConversation)
       endConversation();
+  });
+
+  $(".end-call").on("click", function() {
+    if (activeConversation) {
+      endConversation();
+    }
+    speech.stop();
   });
 };
 

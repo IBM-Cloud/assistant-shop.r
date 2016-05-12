@@ -29,7 +29,7 @@
 </div>
 <div class="container main">
     {#visits}
-    <div class="row item" id="collapse-{value._id}">
+    <div class="row item purchase" id="collapse-{value._id}" data-purchase="{value._id}">
         <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5 panel-title">
             <h1 class="item-name">{value.item.name}</h1>
         </div>
